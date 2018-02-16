@@ -69,10 +69,10 @@ class Blockchain {
   }
 
   replaceChain(newBlocks){
-    if (isValidChain(newBlocks) && newBlocks.length > this.chain.length) {
+    if (this.isValidChain(newBlocks) && newBlocks.length > this.chain.length) {
       console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
       this.chain = newBlocks;
-      this.broadcast(responseLatestMsg());
+      this.broadcast(this.responseLatestMsg());
     } else {
       console.log('Received blockchain invalid');
     }
@@ -86,7 +86,7 @@ class Blockchain {
     app.get('/blocks', (req, res) => res.send(JSON.stringify(this.chain)));
     app.post('/mineBlock', (req, res) => {
       this.addBlock(req.body.data);
-      this.broadcast(responseLatestMsg());
+      this.broadcast(this.responseLatestMsg());
       res.send();
     });
     app.get('/peers', (req, res) => {
@@ -109,7 +109,7 @@ class Blockchain {
     sockets.push(ws);
     this.initMessageHandler(ws);
     this.initErrorHandler(ws);
-    this.write(ws, queryChainLengthMsg());
+    this.write(ws, this.queryChainLengthMsg());
   }
 
   initMessageHandler(ws){
@@ -159,10 +159,10 @@ class Blockchain {
       if (latestBlockHeld.hash === latestBlockReceived.previousHash) {
         console.log("We can append the received block to our chain");
         this.chain.push(latestBlockReceived);
-        this.broadcast(responseLatestMsg());
+        this.broadcast(this.responseLatestMsg());
       } else if (receivedBlocks.length === 1) {
         console.log("We have to query the chain from our peer");
-        this.broadcast(queryAllMsg());
+        this.broadcast(this.queryAllMsg());
       } else {
         console.log("Received blockchain is longer than current blockchain");
         this.replaceChain(receivedBlocks);
@@ -188,6 +188,10 @@ class Blockchain {
   } 
   responseChainMsg() {
     return ({ 'type': MessageType.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(this.chain)});
+  }
+  responseLatestMsg() { return ({
+    'type': MessageType.RESPONSE_BLOCKCHAIN,
+    'data': JSON.stringify([this.getLastBlock()])});
   }
 }
 
