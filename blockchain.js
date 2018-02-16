@@ -72,7 +72,7 @@ class Blockchain {
     if (isValidChain(newBlocks) && newBlocks.length > this.chain.length) {
       console.log('Received blockchain is valid. Replacing current blockchain with received blockchain');
       this.chain = newBlocks;
-      broadcast(responseLatestMsg());
+      this.broadcast(responseLatestMsg());
     } else {
       console.log('Received blockchain invalid');
     }
@@ -101,7 +101,7 @@ class Blockchain {
 
   initP2PServer() {
     var server = new WebSocket.Server({port: p2p_port});
-    server.on('connection', ws => initConnection(ws));
+    server.on('connection', ws => this.initConnection(ws));
     console.log('listening websocket p2p port on: ' + p2p_port);
   }
 
@@ -118,10 +118,10 @@ class Blockchain {
       console.log('Received message' + JSON.stringify(message));
       switch (message.type) {
         case MessageType.QUERY_LATEST:
-        this.write(ws, responseLatestMsg());
+        this.write(ws, this.responseLatestMsg());
         break;
         case MessageType.QUERY_ALL:
-        this.write(ws, responseChainMsg());
+        this.write(ws, this.responseChainMsg());
         break;
         case MessageType.RESPONSE_BLOCKCHAIN:
         this.handleBlockchainResponse(message);
@@ -143,7 +143,7 @@ class Blockchain {
   connectToPeers(newPeers) {
     newPeers.forEach((peer) => {
       var ws = new WebSocket(peer);
-      ws.on('open', () => initConnection(ws));
+      ws.on('open', () => this.initConnection(ws));
       ws.on('error', () => {
         console.log('connection failed')
       });
@@ -177,7 +177,7 @@ class Blockchain {
   }
 
   broadcast(message){
-    sockets.forEach(socket => write(socket, message));
+    sockets.forEach(socket => this.write(socket, message));
   }
 
   queryChainLengthMsg () {
@@ -187,8 +187,8 @@ class Blockchain {
     return ({'type': MessageType.QUERY_ALL});
   } 
   responseChainMsg() {
-    return ({ 'type': MessageType.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(this.ßchain)
-    })};
+    return ({ 'type': MessageType.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(this.chain)});
+  }
 }
 
 module.exports = Blockchain
