@@ -6,16 +6,16 @@ const WebSocket = require("ws")
 
 const http_port = process.env.HTTP_PORT || 3001;
 const p2p_port = process.env.P2P_PORT || 6001;
-const sockets = []
+const difficulty = 2;
 const MessageType = {
     QUERY_LATEST: 0,
     QUERY_ALL: 1,
     RESPONSE_BLOCKCHAIN: 2
 };
+var sockets = []
 
 class Blockchain {
-  constructor(difficulty = 2) {
-    this.index = 1
+  constructor() {
     this.difficulty = difficulty
     this.chain = [this.createGenesisBlock()]
   }
@@ -33,7 +33,7 @@ class Blockchain {
   }
 
   addBlock(data) {
-    const index = this.index
+    const index = this.getLastBlock().index + 1
     const difficulty = this.difficulty
     const previousHash = this.getLastBlock().hash
     if(data == null){
@@ -43,7 +43,6 @@ class Blockchain {
 
     const block = new Block(index, previousHash, data, difficulty)
 
-    this.index++
     this.chain.push(block)
     console.log('Block added: ' + JSON.stringify(this.getLastBlock()));
   }
